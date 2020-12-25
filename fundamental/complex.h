@@ -5,7 +5,7 @@
 class complex
 {
 public: //访问修饰符，public的成员可以通过对象直接调用，而private成员不允许直接通过对象访问
-    complex(double r = 0, double i = 0)     //含有默认参数的构造函数，构造函数不含有返回值，构造函数一般必须是pulicd的，特殊情况下（如单例模式），构造函数可以是privated的
+    complex(double r = 0, double i = 0)     //含有默认参数的构造函数，构造函数不含有返回值，构造函数一般必须是public的，特殊情况下（如单例模式），构造函数可以是privated的
         : re(r), im(i)                      //初始化值列表，一个类的构造过程包括初始化、赋值，与在赋值阶段才给成员赋值相比，使用初始值列表更快
     {}
     complex& operator += (const complex&);  //对+=进行重载，
