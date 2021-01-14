@@ -108,7 +108,122 @@ operator << (std::ostream& os, const complex& rhs)
 
    带有流操作的非成员操作符重载，应返回流的引用。
 
-   
+
+
+
+
 
 ### 下部
+
+#### Big Three 三个特殊函数
+
+1.  拷贝构造函数
+2.  拷贝赋值函数
+3.  析构函数
+
+带有指针成员的类必须有拷贝构造和拷贝赋值函数。
+
+如果使用编译器默认的拷贝赋值函数或拷贝构造函数，得到的拷贝只能是浅拷贝。
+
+使用默认拷贝构造函数时，构造时仅仅使新对象的成员指针等于被拷贝对象的成员指针，而并没有申请新的动态空间并拷贝内容。
+
+使用默认的拷贝赋值函数时，亦仅仅使成员指针指向被拷贝对象的动态内存，而原来的内存并没有释放，导致内存泄漏。
+
+在设计拷贝赋值函数时，一定要注意检测**自我赋值**，否则会导致错误。
+
+```c++
+inline
+String& String::operator=(const String& str)
+{
+    //检测自我赋值
+	if (this == &str)
+		return *this;
+    
+	delete[] m_data;	//①
+	m_data = new char[ strlen(str.m_data) + 1 ]; //②
+	strcpy(m_data, str.m_data);	//③
+	return *this;
+}
+```
+
+设计拷贝赋值函数遵循四步：①检测自我赋值 ②释放原对象成员指针动态分配的内存 ③分配新空间 ④复制内容
+
+
+
+#### Stack栈和Heap堆
+
+1. Stack
+
+   是存在于某作用域（scope）的一块内存空间，调用函数时，函数会有一个Stack用于存储接收的参数及返回地址，函数结束后，栈空间将被回收。
+
+2. Heap
+
+   是一块由操作系统提供的全局内存空间，程序动态分配的内存空间就在这里。空间需要手动回收。
+
+#### 不同种类对象的生命周期
+
+1. stack objects
+
+   ```c++
+   class Comples {...};
+   ...
+   {
+       Complex c1(1,2);
+   }
+   ```
+
+   
+
+   其生命周期所在作用域结束后结束。
+
+   又称为auto object，因为它会被自动回收。
+
+2. static local objects
+
+   ```c++
+   class Comples {...};
+   ...
+   {
+       static Complex c1(1,2);
+   }
+   ```
+
+   
+
+   其生命周期直到程序结束。
+
+3. global objects
+
+   ```c++
+   class Comples {...};
+   ...
+   Complex c3(1,2);
+       
+   int main()
+   {
+       ...
+   }
+   ```
+
+   
+
+   存在于所有作用域之外，其生命周期直到程序结束。
+
+4. heap objects
+
+   ```c++
+   class Complex { … };
+   ...
+   {
+   Complex* p = new Complex;
+   ...
+   delete p;
+   }
+   ```
+
+   
+
+   其生命周期直到它被delete后结束。
+
+#### 对象创建回收与其内存模型
 
