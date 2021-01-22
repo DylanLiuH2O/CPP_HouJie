@@ -111,10 +111,6 @@ operator << (std::ostream& os, const complex& rhs)
 
 
 
-
-
-### 下部
-
 #### Big Three 三个特殊函数
 
 1.  拷贝构造函数
@@ -227,3 +223,177 @@ String& String::operator=(const String& str)
 
 #### 对象创建回收与其内存模型
 
+`留坑待填`
+
+
+
+### 下部
+
+#### 转换函数 conversion function
+
+```c++
+//定义
+class Fraction
+{
+public:
+    Fraction(int num, int den=1)
+        : m_numerator(num), m_denominator(den) {}
+    //转换函数
+    operator double() const {
+        return (double)(m_numerator / m_denominator);
+    }
+private:
+    int m_numerator;
+    int m_denominator;
+}
+```
+
+
+
+```c++
+//调用
+Fraction f(3,5);
+double d = 4 + f; //这里会调用operator double()将f转换为double类型的数值
+```
+
+
+
+#### 非explicit单参数构造函数 non-explicit-one-argument ctor （构造函数）
+
+```c++
+class Fraction
+{
+public:
+    //这里的构造函数没有用explicit修饰，即non-explicit，且仅需提供一个参数即可构造
+    //即one-argument,one-argument意味最少提供一个实参
+    Fraction(int num, int den=1)
+        : m_numerator(num), m_denominator(den) {}
+    Fraction operator+(const Fraction& f) {
+        return Fraction(...);
+    }
+private:
+    int m_numerator;
+    int m_denominator;
+}
+```
+
+
+
+```c++
+//调用
+Fraction f(3,5);
+Fraction d2 = f + 4;
+```
+
+上面代码段中的d2是Fraction类型，因此编译器会试图将后面的表达式转换为Fraction类型，由于Fraction类型的构造函数是non-explicit-one-argument的，所以编译器会将4使用构造函数，转换为Fraction类型的对象，再调用Fraction类型的+重载，对两个Fraction对象进行运算，返回一个Fraction对象。
+
+#### conversion vs. non-explicit-one-argument ctor
+
+对比这转换函数和non-explicit-one-argument ctor，可以发现它们都实现了转换的效果。但是当两种同时存在时，有可能会出现歧义。
+
+```c++
+class Fraction
+{
+public:
+    Fraction(int num, int den=1)
+        : m_numerator(num), m_denominator(den) {}
+    operator double() const {
+        return (double)(m_numerator / m_denominator);
+    }
+    Fraction operator+(const Fraction& f) {
+        return Fraction(...);
+    }
+private:
+    int m_numerator;
+    int m_denominator;
+}
+```
+
+这时候如果编译代码
+
+```c++
+Fraction f(3,5);
+Fraction d2 = f + 4;
+```
+
+会提示
+
+```
+main.cpp: In function ‘int main()’:
+main.cpp:34:19: error: ambiguous overload for ‘operator+’ (operand types are ‘Fraction’ and ‘int’)
+    Fraction d = f + 4;
+                 ~~^~~
+```
+
+这是由于f可以通过转换函数转换为double型数值，然后与4运算，最后结果通过构造函数转换为Fraction对象，并且4也可以通过构造函数转换为Fraction对象，再调用重载的+运算符进行运算，得到Fraction对象，所以编译器无法确定通过哪种路径来进行转换，于是乎编译出错。
+
+#### explicit单参数构造函数 explicit-one-argument ctor
+
+为了解决前面所说的问题，我们可以给构造函数加上explicit进行修饰，来告诉编译器，不要在没有写明调用构造函数时，去隐式自动调用构造函数来进行转换。
+
+```c++
+class Fraction
+{
+public:
+    //加上explicit修饰
+    explicit Fraction(int num, int den=1)
+        : m_numerator(num), m_denominator(den) {}
+    operator double() const {
+        return (double)(m_numerator / m_denominator);
+    }
+    Fraction operator+(const Fraction& f) {
+        return Fraction(...);
+    }
+private:
+    int m_numerator;
+    int m_denominator;
+}
+```
+
+
+
+```c++
+Fraction f(3,5);
+Fraction d = f + 4;
+```
+
+这时候编译代码提示
+
+```
+main.cpp: In function ‘int main()’:
+main.cpp:34:19: error: conversion from ‘double’ to non-scalar type ‘Fraction’ requested
+    Fraction d = f + 4;
+                 ~~^~~
+```
+
+因为对构造函数使用explicit修饰之后，禁止了编译器隐式调用构造函数进行转换，而此前两条路径都会用到隐式调用构造函数进行转换，因此这时候转换无法完成，编译报错。
+
+对第一条路径进行分析：f可以通过转换函数转换为double型数值，然后与4进行运算得到double数值，但是这时候由于构造函数使用了explicit，无法将double数值隐式构造成为一个Fraction对象，转换失败。
+
+对第二条路径进行分析：4原来可以通过构造函数转换为一个Fraction对象，而现在构造函数使用了explicit修饰，不允许隐式构造，因此转换失败。
+
+那么正确的做法是，对构造函数使用explicit修饰之后，为f + 4这种情况新增一个运算符重载
+
+```c++
+class Fraction
+{
+public:
+    explicit Fraction(int num, int den=1)
+        : m_numerator(num), m_denominator(den) {}
+    operator double() const {
+        return (double)(m_numerator / m_denominator);
+    }
+    //新增运算符重载，右边参数是int类型
+    Fraction operator+(int x) {
+        return Fraction(...);
+    }
+    Fraction operator+(const Fraction& f) {
+        return Fraction(...);
+    }
+private:
+    int m_numerator;
+    int m_denominator;
+}
+```
+
+此时代码编译通过。
