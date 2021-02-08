@@ -6,10 +6,10 @@
 [油管链接](https://www.youtube.com/playlist?list=PL-X74YXt4LVZ137kKM5dNfCIC4tsScerb)`B站的视频都凉了，只有油管能看了`
 
 C++标准库体系结构与内核分析：
-[油管连接](https://www.youtube.com/playlist?list=PLTcwR9j5y6W2Bf4S-qi0HBQlHXQVFoJrP)
+[油管链接](https://www.youtube.com/playlist?list=PLTcwR9j5y6W2Bf4S-qi0HBQlHXQVFoJrP)
 
 `/fundamental` 入门基础课的代码和笔记  
-`/exploreSTL` C++标准库体系结构与内核分析课程的代码和笔记  
+`/exploreSTL` C++标准库体系结构与内核分析课的代码和笔记  
 
 **PS:** 看过《C++ Primer》之后再看这个有种融汇贯通的感觉
 
